@@ -1,0 +1,6 @@
+The Killersheep game goes under the same license as Vim.
+You can find the text here: 
+https://github.com/vim/vim/blob/master/runtime/doc/uganda.txt
+
+It basically means you can copy the files as you like and also re-distribute
+them, so long as you keep the license.
