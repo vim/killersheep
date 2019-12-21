@@ -98,6 +98,7 @@ endfunc
 func s:IntroFilter(id, key)
   if a:key == 's' || a:key == 'S'
     call s:Clear()
+	let s:time_start = reltime()
     let s:round = 0
     let s:ready = popup_create('Get Ready!', #{border: [], padding: [2, 4, 2, 4]})
     call s:BlinkLevel(s:ready, 1)
@@ -204,12 +205,19 @@ func s:NextRound()
 	\ })
 endfunc
 
+func s:GetScoreStr(round)
+  return 'Level ' .. (a:round) .. ' | Time ' .. split(trim(reltimestr(reltime(s:time_start))), '\.')[0]
+endfunc
+
 func s:ShowLevel(line)
-  let s:levelid = popup_create('Level ' .. s:round, #{
+  let s:levelid = popup_create(s:GetScoreStr(s:round), #{
 	\ line: a:line ? a:line : 1,
 	\ border: [],
 	\ padding: [0,1,0,1],
 	\ highlight: 'KillerLevel'})
+  if !get(s:, 'score_timer', 0)
+    let s:score_timer = timer_start(1000, {x -> popup_settext(s:levelid, s:GetScoreStr(s:round))}, {'repeat': -1})
+  endif
 endfunc
 
 func s:MoveCanon(id, key)
@@ -562,13 +570,17 @@ endfunc
 
 func s:PlaySoundForEnd()
   let s:frozen = 1
+  if get(s:, 'score_timer', 0)
+    call timer_stop(s:score_timer)
+    let s:score_timer = 0
+  endif
   if s:sheepcount == 0
     call s:PlaySound('win')
     if s:round == 5
       echomsg 'Amazing, you made it through ALL levels! (did you cheat???)'
       let s:end_timer = timer_start(2000, {x -> s:Clear()})
     else
-      call popup_settext(s:levelid, 'Level ' .. (s:round + 1))
+      call popup_settext(s:levelid, s:GetScoreStr(s:round + 1))
       call s:BlinkLevel(s:levelid, 1)
       call timer_start(2000, {x -> s:NextRound()})
     endif
@@ -605,5 +617,9 @@ func s:Clear()
   if get(s:, 'blink_timer', 0)
     call timer_stop(s:blink_timer)
     let s:blink_timer = 0
+  endif
+  if get(s:, 'score_timer', 0)
+    call timer_stop(s:score_timer)
+    let s:score_timer = 0
   endif
 endfunc
