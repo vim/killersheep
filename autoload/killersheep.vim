@@ -330,13 +330,13 @@ func GetMask(l)
     let l = a:l[r]
     for c in range(len(l))
       if l[c] == ' '
-    let e = c
+        let e = c
       elseif e >= s
-    call add(mask, [s+1,e+1,r+1,r+1])
-    let s = c + 1
-    let e = c
+        call add(mask, [s+1,e+1,r+1,r+1])
+        let s = c + 1
+        let e = c
       else
-    let s = c + 1
+        let s = c + 1
       endif
     endfor
     if e >= s
