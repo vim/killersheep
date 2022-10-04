@@ -158,7 +158,7 @@ func s:Init()
   hi def KillerLevelX ctermbg=yellow guibg=yellow
 
   if !exists('g:killersheep_sound_ext')
-    if has('win32') || len(s:sound_cmd)
+    if has('win32') || has('osx') || len(s:sound_cmd)
       " most systems can play MP3 files
       let g:killersheep_sound_ext = ".mp3"
     else
