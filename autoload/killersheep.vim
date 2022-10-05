@@ -98,7 +98,7 @@ endfunc
 func s:IntroFilter(id, key)
   if a:key == 's' || a:key == 'S'
     call s:Clear()
-	let s:time_start = reltime()
+    let s:time_start = reltime()
     let s:round = 0
     let s:ready = popup_create('Get Ready!', #{border: [], padding: [2, 4, 2, 4]})
     call s:BlinkLevel(s:ready, 1)
@@ -330,13 +330,13 @@ func GetMask(l)
     let l = a:l[r]
     for c in range(len(l))
       if l[c] == ' '
-	let e = c
+        let e = c
       elseif e >= s
-	call add(mask, [s+1,e+1,r+1,r+1])
-	let s = c + 1
-	let e = c
+        call add(mask, [s+1,e+1,r+1,r+1])
+        let s = c + 1
+        let e = c
       else
-	let s = c + 1
+        let s = c + 1
       endif
     endfor
     if e >= s
