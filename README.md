@@ -43,7 +43,7 @@ you don't want your friends/colleagues to find out what you are doing).
 Or, if you don't have conflicting commands, just:
 
 ```vim
-:Kill
+:KillK
 ```
 
 In the game:
@@ -55,6 +55,17 @@ In the game:
 | Space   | fire cannon       |
 | Esc     | exit game         |
 
+Second: you may like to check the history metric for much fun?
+
+```vim
+:KillerMetric
+```
+
+Or, if you don't have conflicting commands, just:
+
+```vim
+:Killer
+```
 
 Requirements
 ------------

@@ -5,6 +5,8 @@
 
 let s:did_init = 0
 let s:sound_cmd = ''
+let s:roundMax = 5
+let s:scoreFile = expand("$HOME/.killersheep")
 
 func killersheep#Start(sounddir)
   let s:dir = a:sounddir
@@ -206,7 +208,39 @@ func s:NextRound()
 endfunc
 
 func s:GetScoreStr(round)
-  return 'Level ' .. (a:round) .. ' | Time ' .. split(trim(reltimestr(reltime(s:time_start))), '\.')[0]
+  return 'Level: ' .. (a:round) .. ' | Time: ' .. split(trim(reltimestr(reltime(s:time_start))), '\.')[0]
+endfunc
+
+func s:PersistScore(round)
+  if !exists("*strftime") || empty(expand("$HOME"))
+    return
+  endif
+  call writefile([strftime("%Y-%m-%d-%T") .. ' | ' .. s:GetScoreStr(a:round)], s:scoreFile, 'a')
+endfunc
+
+func killersheep#MetricScore()
+  if !s:scoreFile->filereadable()
+    return []
+  endif
+  let s = readfile(s:scoreFile)->map("v:val->split(' | ')")
+  if empty(s)
+    return []
+  endif
+  let r = []
+  let i = 1
+  while i <= s:roundMax
+    let t = s->copy()->filter("v:val[1] =~ 'Level: " .. i .. "'")
+    if empty(t)
+      let i += 1
+      continue
+    endif
+    let r += ["Level: " .. i .. " | TopScore:" .. t->reduce({ acc, val -> min([acc, val[2]->split()[1]]) }, 999999)]
+    let i += 1
+  endwhile
+  " if !empty(r)
+  "   let r += ["-- detail at " .. s:scoreFile]
+  " endif
+  return r
 endfunc
 
 func s:ShowLevel(line)
@@ -576,7 +610,8 @@ func s:PlaySoundForEnd()
   endif
   if s:sheepcount == 0
     call s:PlaySound('win')
-    if s:round == 5
+    call s:PersistScore(s:round)
+    if s:round == s:roundMax
       echomsg 'Amazing, you made it through ALL levels! (did you cheat???)'
       let s:end_timer = timer_start(2000, {x -> s:Clear()})
     else
@@ -623,3 +658,5 @@ func s:Clear()
     let s:score_timer = 0
   endif
 endfunc
+
+" vim: sw=2 sts=2 et
