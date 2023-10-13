@@ -1,5 +1,5 @@
 " Silly game to show off new features in Vim 8.2.
-" Last Update: 2019 Dec 7
+" Last Update: 2023 Oct 13
 "
 " Requirements:
 " - feature +textprop

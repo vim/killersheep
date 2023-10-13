@@ -1,12 +1,13 @@
 " Implementation of the silly game
 " Use :KillKillKill to start
 "
-" Last Update: 2019 Dec 7
+" Last Update: 2023 Oct 13
 
 let s:did_init = 0
 let s:sound_cmd = ''
-let s:roundMax = 5
-let s:scoreFile = expand("$HOME/.killersheep")
+
+const s:round_max = 5
+const s:score_file = expand("$HOME/.killersheep")
 
 func killersheep#Start(sounddir)
   let s:dir = a:sounddir
@@ -215,20 +216,20 @@ func s:PersistScore(round)
   if !exists("*strftime") || empty(expand("$HOME"))
     return
   endif
-  call writefile([strftime("%Y-%m-%d-%T") .. ' | ' .. s:GetScoreStr(a:round)], s:scoreFile, 'a')
+  call writefile([strftime("%Y-%m-%d-%T") .. ' | ' .. s:GetScoreStr(a:round)], s:score_file, 'a')
 endfunc
 
 func killersheep#MetricScore()
-  if !s:scoreFile->filereadable()
+  if !s:score_file->filereadable()
     return []
   endif
-  let s = readfile(s:scoreFile)->map("v:val->split(' | ')")
+  let s = readfile(s:score_file)->map("v:val->split(' | ')")
   if empty(s)
     return []
   endif
   let r = []
   let i = 1
-  while i <= s:roundMax
+  while i <= s:round_max
     let t = s->copy()->filter("v:val[1] =~ 'Level: " .. i .. "'")
     if empty(t)
       let i += 1
@@ -238,7 +239,7 @@ func killersheep#MetricScore()
     let i += 1
   endwhile
   " if !empty(r)
-  "   let r += ["-- detail at " .. s:scoreFile]
+  "   let r += ["-- detail at " .. s:score_file]
   " endif
   return r
 endfunc
@@ -611,7 +612,7 @@ func s:PlaySoundForEnd()
   if s:sheepcount == 0
     call s:PlaySound('win')
     call s:PersistScore(s:round)
-    if s:round == s:roundMax
+    if s:round == s:round_max
       echomsg 'Amazing, you made it through ALL levels! (did you cheat???)'
       let s:end_timer = timer_start(2000, {x -> s:Clear()})
     else
