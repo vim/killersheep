@@ -1,10 +1,13 @@
 " Implementation of the silly game
 " Use :KillKillKill to start
 "
-" Last Update: 2019 Dec 7
+" Last Update: 2023 Oct 13
 
 let s:did_init = 0
 let s:sound_cmd = ''
+
+const s:round_max = 5
+const s:score_file = expand("$HOME/.killersheep")
 
 func killersheep#Start(sounddir)
   let s:dir = a:sounddir
@@ -98,6 +101,7 @@ endfunc
 func s:IntroFilter(id, key)
   if a:key == 's' || a:key == 'S'
     call s:Clear()
+    let s:time_start = reltime()
     let s:round = 0
     let s:ready = popup_create('Get Ready!', #{border: [], padding: [2, 4, 2, 4]})
     call s:BlinkLevel(s:ready, 1)
@@ -204,12 +208,53 @@ func s:NextRound()
 	\ })
 endfunc
 
+func s:GetScoreStr(round)
+  return 'Level: ' .. (a:round) .. ' | Time: ' .. split(trim(reltimestr(reltime(s:time_start))), '\.')[0]
+endfunc
+
+func s:PersistScore(round)
+  if !exists("*strftime") || empty(expand("$HOME"))
+    return
+  endif
+  call writefile([strftime("%Y-%m-%d %T") .. ' | ' .. s:GetScoreStr(a:round)], s:score_file, 'a')
+endfunc
+
+func killersheep#MetricScore()
+  if !s:score_file->filereadable()
+    return []
+  endif
+  let s = readfile(s:score_file)->map("v:val->split(' | ')")
+  if empty(s)
+    return []
+  endif
+  let r = []
+  let i = 1
+  while i <= s:round_max
+    let t = s->copy()->filter("v:val[1] =~ 'Level: " .. i .. "'")
+    if empty(t)
+      let i += 1
+      continue
+    endif
+    let m = t->reduce({ acc, val -> min([acc, val[2]->split()[1]]) }, 999999)
+    let h = t->filter("v:val[2] =~ 'Time: " .. m .. "'")[-1][0]
+    let r += ["Level: " .. i .. " | TopScore:" .. m .. " | " .. h]
+    let i += 1
+  endwhile
+  " if !empty(r)
+  "   let r += ["-- detail at " .. s:score_file]
+  " endif
+  return r
+endfunc
+
 func s:ShowLevel(line)
-  let s:levelid = popup_create('Level ' .. s:round, #{
+  let s:levelid = popup_create(s:GetScoreStr(s:round), #{
 	\ line: a:line ? a:line : 1,
 	\ border: [],
 	\ padding: [0,1,0,1],
 	\ highlight: 'KillerLevel'})
+  if !get(s:, 'score_timer', 0)
+    let s:score_timer = timer_start(1000, {x -> popup_settext(s:levelid, s:GetScoreStr(s:round))}, {'repeat': -1})
+  endif
 endfunc
 
 func s:MoveCanon(id, key)
@@ -322,13 +367,13 @@ func GetMask(l)
     let l = a:l[r]
     for c in range(len(l))
       if l[c] == ' '
-	let e = c
+        let e = c
       elseif e >= s
-	call add(mask, [s+1,e+1,r+1,r+1])
-	let s = c + 1
-	let e = c
+        call add(mask, [s+1,e+1,r+1,r+1])
+        let s = c + 1
+        let e = c
       else
-	let s = c + 1
+        let s = c + 1
       endif
     endfor
     if e >= s
@@ -562,13 +607,18 @@ endfunc
 
 func s:PlaySoundForEnd()
   let s:frozen = 1
+  if get(s:, 'score_timer', 0)
+    call timer_stop(s:score_timer)
+    let s:score_timer = 0
+  endif
   if s:sheepcount == 0
     call s:PlaySound('win')
-    if s:round == 5
+    call s:PersistScore(s:round)
+    if s:round == s:round_max
       echomsg 'Amazing, you made it through ALL levels! (did you cheat???)'
       let s:end_timer = timer_start(2000, {x -> s:Clear()})
     else
-      call popup_settext(s:levelid, 'Level ' .. (s:round + 1))
+      call popup_settext(s:levelid, s:GetScoreStr(s:round + 1))
       call s:BlinkLevel(s:levelid, 1)
       call timer_start(2000, {x -> s:NextRound()})
     endif
@@ -606,4 +656,10 @@ func s:Clear()
     call timer_stop(s:blink_timer)
     let s:blink_timer = 0
   endif
+  if get(s:, 'score_timer', 0)
+    call timer_stop(s:score_timer)
+    let s:score_timer = 0
+  endif
 endfunc
+
+" vim: sw=2 sts=2 et
