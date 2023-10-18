@@ -1,5 +1,5 @@
 " Silly game to show off new features in Vim 8.2.
-" Last Update: 2019 Dec 7
+" Last Update: 2023 Oct 13
 "
 " Requirements:
 " - feature +textprop
@@ -28,6 +28,7 @@ let g:loaded_killersheep = 1
 let s:dir = expand('<sfile>:h')
 
 command KillKillKill call s:StartKillerSheep()
+command KillerMetric call s:MetricScore()
 
 func s:StartKillerSheep()
   " Check features before loading the autoload file to avoid error messages.
@@ -54,3 +55,16 @@ func s:Sorry(msg)
   echo a:msg
   echohl None
 endfunc
+
+func s:MetricScore()
+  let r = killersheep#MetricScore()
+  if empty(r)
+    call s:Sorry('Sorry, no result so far, or some err happened')
+  else
+    for v in r
+      echom v
+    endfor
+  endif
+endfunc
+
+" vim: sw=2 sts=2 et
