@@ -216,7 +216,7 @@ func s:PersistScore(round)
   if !exists("*strftime") || empty(expand("$HOME"))
     return
   endif
-  call writefile([strftime("%Y-%m-%d-%T") .. ' | ' .. s:GetScoreStr(a:round)], s:score_file, 'a')
+  call writefile([strftime("%Y-%m-%d %T") .. ' | ' .. s:GetScoreStr(a:round)], s:score_file, 'a')
 endfunc
 
 func killersheep#MetricScore()
@@ -235,7 +235,9 @@ func killersheep#MetricScore()
       let i += 1
       continue
     endif
-    let r += ["Level: " .. i .. " | TopScore:" .. t->reduce({ acc, val -> min([acc, val[2]->split()[1]]) }, 999999)]
+    let m = t->reduce({ acc, val -> min([acc, val[2]->split()[1]]) }, 999999)
+    let h = t->filter("v:val[2] =~ 'Time: " .. m .. "'")[-1][0]
+    let r += ["Level: " .. i .. " | TopScore:" .. m .. " | " .. h]
     let i += 1
   endwhile
   " if !empty(r)
